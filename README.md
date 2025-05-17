@@ -37,7 +37,7 @@ Product Search is a simple yet powerful autocomplete component built with Next.j
 
 2.  **Navigate to the project directory:**
     ```bash
-    cd omni-search-app
+    cd product-search-app
     ```
 
 3.  **Install dependencies:**
@@ -72,7 +72,7 @@ npm run start
 
 2.  **Component Structure:**
     -   `HomePage` (`src/app/page.tsx`): The main landing page, responsible for the overall layout and centering the search functionality.
-    -   `Product Search` (`src/components/omni-search.tsx`): The core client component (`"use client"`) handling all aspects of the autocomplete functionality:
+    -   `Product Search` (`src/components/product-search.tsx`): The core client component (`"use client"`) handling all aspects of the autocomplete functionality:
         -   Input field for user queries.
         -   State management for search term, suggestions, loading status, errors, pagination, and dropdown visibility using React Hooks (`useState`, `useRef`).
         -   Dropdown list to display product suggestions.
