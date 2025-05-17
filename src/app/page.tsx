@@ -8,7 +8,7 @@ export default function HomePage() {
       <header className="mb-8 text-center">
         <h1 className="text-5xl sm:text-6xl font-bold text-primary tracking-tight">
           <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
-            OmniSearch
+            Product Search
           </span>
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
@@ -21,7 +21,7 @@ export default function HomePage() {
       </main>
 
       <footer className="absolute bottom-6 text-center text-sm text-muted-foreground">
-        <p>&copy; <CurrentYear /> OmniSearch. Built with Next.js and ❤️.</p>
+        <p>&copy; <CurrentYear /> Product Search. Built with Next.js and ❤️.</p>
       </footer>
     </div>
   );

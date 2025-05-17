@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Product, ProductSearchResult } from '@/types/product';
@@ -9,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -95,7 +97,8 @@ export default function OmniSearch() {
     if (searchTerm.length >= MIN_SEARCH_LENGTH && currentPage > 0) {
         fetchSuggestions(searchTerm, currentPage);
     }
-  }, [currentPage, searchTerm, fetchSuggestions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]); // searchTerm is excluded as it's handled by the debounced effect
 
 
   useEffect(() => {
@@ -132,8 +135,8 @@ export default function OmniSearch() {
 
   return (
     <div className="relative w-full max-w-xl mx-auto">
-      <div className="relative">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <div className="relative flex items-center">
+        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
         <Input
           ref={inputRef}
           type="text"
@@ -141,26 +144,39 @@ export default function OmniSearch() {
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           placeholder="Search for products..."
-          className="w-full pl-10 pr-4 py-3 text-lg rounded-full shadow-lg focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="w-full pl-10 pr-10 py-3 text-lg rounded-full shadow-lg focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2"
           aria-label="Search products"
         />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
+        )}
       </div>
+
+      {isLoading && searchTerm.length >= MIN_SEARCH_LENGTH && (
+         <div className="w-full pt-2 px-1"> {/* Added pt-2 for a little space, px-1 to align with input's visual width */}
+           <Progress value={50} className="h-1 w-full rounded-full" />
+         </div>
+      )}
 
       {isDropdownVisible && (
         <Card 
             ref={dropdownRef} 
-            className="absolute z-10 mt-2 w-full rounded-lg border bg-popover shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95"
+            className={cn(
+              "absolute z-10 mt-2 w-full rounded-lg border bg-popover shadow-xl overflow-hidden",
+              "animate-in fade-in-0 zoom-in-95" 
+            )}
             data-state={isDropdownVisible ? "open" : "closed"}
         >
           <CardContent className="p-0">
-            {isLoading && suggestions.length === 0 && ( // Show main loader only if no suggestions yet
+            {/* This loader shows if suggestions are empty AND we are loading. The input loader is more general. */}
+            {isLoading && suggestions.length === 0 && searchTerm.length >= MIN_SEARCH_LENGTH && (
               <div className="p-6 flex items-center justify-center text-muted-foreground">
                 <Loader2 className="mr-2 h-6 w-6 animate-spin text-primary" />
                 <span>Loading suggestions...</span>
               </div>
             )}
 
-            {!isLoading && error && suggestions.length === 0 && (
+            {!isLoading && error && suggestions.length === 0 && searchTerm.length >= MIN_SEARCH_LENGTH && (
               <Alert variant="destructive" className="m-2 rounded-md">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
@@ -174,7 +190,7 @@ export default function OmniSearch() {
                   <li key={product.id}>
                     <Button
                       variant="ghost"
-                      className="w-full h-auto justify-start p-3 rounded-none text-left hover:bg-accent/50"
+                      className="w-full h-auto justify-start p-3 rounded-none text-left hover:bg-accent/20" // Adjusted hover to be less intense with new accent
                       onClick={() => handleSuggestionClick(product)}
                     >
                       <Image

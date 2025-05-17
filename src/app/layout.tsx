@@ -9,7 +9,7 @@ const geistSans = GeistSans; // Using GeistSans directly
 const geistMono = GeistMono; // Using GeistMono directly
 
 export const metadata: Metadata = {
-  title: 'OmniSearch',
+  title: 'Product Search',
   description: 'Autocomplete product search by Firebase Studio',
 };
 
