@@ -1,4 +1,4 @@
-# **App Name**: OmniSearch
+# **App Name**: Product Search
 
 ## Core Features:
 
