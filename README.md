@@ -1,6 +1,6 @@
-# OmniSearch
+# Product Search
 
-OmniSearch is a simple yet powerful autocomplete component built with Next.js and React that allows users to search for products using an external API. It features debounced API calls, pagination, loading and error states, and a clean, responsive UI inspired by modern search interfaces.
+Product Search is a simple yet powerful autocomplete component built with Next.js and React that allows users to search for products using an external API. It features debounced API calls, pagination, loading and error states, and a clean, responsive UI inspired by modern search interfaces.
 
 ## Features
 
@@ -72,7 +72,7 @@ npm run start
 
 2.  **Component Structure:**
     -   `HomePage` (`src/app/page.tsx`): The main landing page, responsible for the overall layout and centering the search functionality.
-    -   `OmniSearch` (`src/components/omni-search.tsx`): The core client component (`"use client"`) handling all aspects of the autocomplete functionality:
+    -   `Product Search` (`src/components/omni-search.tsx`): The core client component (`"use client"`) handling all aspects of the autocomplete functionality:
         -   Input field for user queries.
         -   State management for search term, suggestions, loading status, errors, pagination, and dropdown visibility using React Hooks (`useState`, `useRef`).
         -   Dropdown list to display product suggestions.
@@ -97,7 +97,7 @@ npm run start
 
 6.  **Code Quality & Maintainability:**
     -   Used functional components and React Hooks throughout.
-    -   Modularized the search logic into the `OmniSearch` component.
+    -   Modularized the search logic into the `Product Search` component.
     -   Leveraged ShadCN UI components for pre-built, accessible, and stylable UI elements, customizing them as needed.
     -   Included comments where necessary to explain logic.
 

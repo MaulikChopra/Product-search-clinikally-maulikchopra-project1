@@ -21,7 +21,7 @@ export default function HomePage() {
       </main>
 
       <footer className="absolute bottom-6 text-center text-sm text-muted-foreground">
-        <p>&copy; <CurrentYear /> Product Search. Built with Next.js and ❤️.</p>
+        <p>&copy; <CurrentYear /> Product Search by <b>Maulik Chopra</b>. Built with ❤️.</p>
       </footer>
     </div>
   );
