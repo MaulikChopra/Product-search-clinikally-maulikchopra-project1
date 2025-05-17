@@ -1,4 +1,6 @@
+
 import OmniSearch from '@/components/omni-search';
+import { CurrentYear } from '@/components/current-year';
 
 export default function HomePage() {
   return (
@@ -19,7 +21,7 @@ export default function HomePage() {
       </main>
 
       <footer className="absolute bottom-6 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} OmniSearch. Built with Next.js and ❤️.</p>
+        <p>&copy; <CurrentYear /> OmniSearch. Built with Next.js and ❤️.</p>
       </footer>
     </div>
   );
