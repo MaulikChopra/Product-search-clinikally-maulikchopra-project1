@@ -2,7 +2,7 @@
 "use client";
 
 import type { Product, ProductSearchResult } from '@/types/product';
-import { AlertTriangle, ChevronLeft, ChevronRight, Loader2, Search as SearchIcon } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Search as SearchIcon } from 'lucide-react'; // Removed Loader2
 import Image from 'next/image';
 import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 const DEBOUNCE_DELAY = 500;
 const MIN_SEARCH_LENGTH = 2;
-const PRODUCTS_PER_PAGE = 5; // Reduced for better UI in dropdown
+const PRODUCTS_PER_PAGE = 5;
 
 export default function OmniSearch() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,12 +30,17 @@ export default function OmniSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const [progress, setProgress] = useState(0);
+  const [showProgressBar, setShowProgressBar] = useState(false);
+
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
 
   const fetchSuggestions = useCallback(async (query: string, page: number) => {
     if (query.length < MIN_SEARCH_LENGTH) {
       setSuggestions([]);
       setIsDropdownVisible(false);
+      setError(null); // Clear error when query is too short
+      setIsLoading(false); // Ensure loading is false
       return;
     }
 
@@ -55,7 +60,6 @@ export default function OmniSearch() {
       setTotalProducts(data.total);
       setIsDropdownVisible(data.products.length > 0);
       if (data.products.length === 0 && data.total > 0 && page > 1) {
-        // If current page is empty but there are products, go to last valid page
         setCurrentPage(Math.ceil(data.total / PRODUCTS_PER_PAGE));
       } else if (data.products.length === 0 && data.total === 0) {
          setError("No products found for your query.");
@@ -79,12 +83,13 @@ export default function OmniSearch() {
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchTerm.length >= MIN_SEARCH_LENGTH) {
-        setCurrentPage(1); // Reset to first page on new search term
+        setCurrentPage(1); 
         fetchSuggestions(searchTerm, 1);
       } else {
         setSuggestions([]);
         setIsDropdownVisible(false);
         setError(null);
+        setIsLoading(false); // Explicitly set isLoading to false
       }
     }, DEBOUNCE_DELAY);
 
@@ -94,11 +99,17 @@ export default function OmniSearch() {
   }, [searchTerm, fetchSuggestions]);
 
   useEffect(() => {
-    if (searchTerm.length >= MIN_SEARCH_LENGTH && currentPage > 0) {
-        fetchSuggestions(searchTerm, currentPage);
+    if (searchTerm.length >= MIN_SEARCH_LENGTH && currentPage > 0 && !isLoading) { // Fetch only if not already loading due to searchterm change
+      // Check if the debounced fetch for searchTerm would have already triggered this.
+      // This effect is mainly for page changes.
+      const newSkip = (currentPage - 1) * PRODUCTS_PER_PAGE;
+      const currentSkipGuessForSearchTerm = 0; // Debounced effect resets page to 1
+      if (newSkip !== currentSkipGuessForSearchTerm || suggestions.length > 0) { // Avoid re-fetching if searchTerm just changed
+         fetchSuggestions(searchTerm, currentPage);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]); // searchTerm is excluded as it's handled by the debounced effect
+  }, [currentPage]);
 
 
   useEffect(() => {
@@ -113,20 +124,49 @@ export default function OmniSearch() {
     };
   }, []);
 
+  // Effect for managing progress bar animation
+  useEffect(() => {
+    let hideTimeout: NodeJS.Timeout | undefined;
+    let animateToNinetyTimeout: NodeJS.Timeout | undefined;
+
+    if (isLoading && searchTerm.length >= MIN_SEARCH_LENGTH) {
+      setShowProgressBar(true);
+      setProgress(10); // Start animation from 10%
+      animateToNinetyTimeout = setTimeout(() => {
+        setProgress(90); // Animate towards 90%
+      }, 50); // Short delay for CSS transition to pick up from 10%
+    } else if (!isLoading && showProgressBar) {
+      // Loading finished and progress bar was visible
+      setProgress(100); // Animate to 100%
+      hideTimeout = setTimeout(() => {
+        setShowProgressBar(false);
+        // setProgress(0); // Reset implicitly by the next condition or when loading starts
+      }, 600); // Wait for animation (500ms) + buffer (100ms)
+    } else if (!isLoading && !showProgressBar && progress !== 0) {
+      // If not loading and not showing, ensure progress is reset
+      setProgress(0);
+    }
+  
+    return () => {
+      if (animateToNinetyTimeout) clearTimeout(animateToNinetyTimeout);
+      if (hideTimeout) clearTimeout(hideTimeout);
+    };
+  }, [isLoading, searchTerm, showProgressBar, progress]);
+
+
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
   
   const handleInputFocus = () => {
-    if (searchTerm.length >= MIN_SEARCH_LENGTH && suggestions.length > 0) {
+    if (searchTerm.length >= MIN_SEARCH_LENGTH && suggestions.length > 0 && !error) {
         setIsDropdownVisible(true);
     }
   }
 
   const handleSuggestionClick = (product: Product) => {
-    setSearchTerm(product.title); // Or navigate to product page, etc.
+    setSearchTerm(product.title); 
     setIsDropdownVisible(false);
-    // Potentially fetch full product details or navigate
     toast({
         title: "Selected Product",
         description: `${product.title} selected. Price: $${product.price}`
@@ -144,17 +184,15 @@ export default function OmniSearch() {
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           placeholder="Search for products..."
-          className="w-full pl-10 pr-10 py-3 text-lg rounded-full shadow-lg focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="w-full pl-10 pr-4 py-3 text-lg rounded-full shadow-lg focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2" // pr-4 since no spinner
           aria-label="Search products"
         />
-        {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
-        )}
+        {/* Spinner removed from here */}
       </div>
 
-      {isLoading && searchTerm.length >= MIN_SEARCH_LENGTH && (
-         <div className="w-full pt-2 px-1"> {/* Added pt-2 for a little space, px-1 to align with input's visual width */}
-           <Progress value={50} className="h-1 w-full rounded-full" />
+      {showProgressBar && searchTerm.length >= MIN_SEARCH_LENGTH && (
+         <div className="w-full pt-2 px-1">
+           <Progress value={progress} className="h-1 w-full rounded-full" />
          </div>
       )}
 
@@ -171,7 +209,7 @@ export default function OmniSearch() {
             {/* This loader shows if suggestions are empty AND we are loading. The input loader is more general. */}
             {isLoading && suggestions.length === 0 && searchTerm.length >= MIN_SEARCH_LENGTH && (
               <div className="p-6 flex items-center justify-center text-muted-foreground">
-                <Loader2 className="mr-2 h-6 w-6 animate-spin text-primary" />
+                {/* <Loader2 className="mr-2 h-6 w-6 animate-spin text-primary" /> // This Loader2 can also be removed if only progress bar is desired */}
                 <span>Loading suggestions...</span>
               </div>
             )}
@@ -190,7 +228,7 @@ export default function OmniSearch() {
                   <li key={product.id}>
                     <Button
                       variant="ghost"
-                      className="w-full h-auto justify-start p-3 rounded-none text-left hover:bg-accent/20" // Adjusted hover to be less intense with new accent
+                      className="w-full h-auto justify-start p-3 rounded-none text-left hover:bg-accent/20"
                       onClick={() => handleSuggestionClick(product)}
                     >
                       <Image
@@ -212,7 +250,7 @@ export default function OmniSearch() {
               </ul>
             )}
 
-            {totalProducts > PRODUCTS_PER_PAGE && suggestions.length > 0 && (
+            {totalProducts > PRODUCTS_PER_PAGE && suggestions.length > 0 && !isLoading && ( // Added !isLoading to hide pagination during load
               <div className="p-2 flex justify-between items-center border-t border-border bg-background/50">
                 <Button
                   variant="outline"
